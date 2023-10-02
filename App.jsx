@@ -3,10 +3,10 @@ import './App.css'
 import React, { useState, useRef , useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PerspectiveCamera, OrthographicCamera, Environment, OrbitControls, TransformControls, useCursor , useGLTF} from '@react-three/drei'
-import { Leva, folder, useControls } from 'leva';
 import AppNavbar from './components/Navbar'
 import Buttons from './components/AddObjects';
 import Toggles from "./components/Toggles";
+import Interface from "./components/Interface";
 
 
 
@@ -18,6 +18,7 @@ function App() {
   const [axesView, setaxesView] = useState(true);
   const [camView, setcamView] = useState(false);
   const [camPosition, setcamPosition] = useState([0, 0, 10]);
+  const [changeMode, setchangeMode] = useState('translate');
   const [PrevcamPosition] = useState(new THREE.Vector3(0, 0, 0));
 
   const updateGridView = (updateGridView) => {
@@ -30,7 +31,6 @@ function App() {
   }
   const updateCamView = (updateCamView) => {
     setcamView(updateCamView);
-    console.log(camPosition)
     if(!updateCamView){
       orbitControlsRef.current.object.position.copy(PrevcamPosition)
       orbitControlsRef.current.object.position.set(camPosition[0], camPosition[1], camPosition[2])
@@ -39,9 +39,11 @@ function App() {
     } 
   }
   const updateCamPosition = (updateCamPosition) => {
-    // orbitControlsRef.current.target.copy(updateCamPosition)
     setcamPosition(updateCamPosition)
-    console.log(updateCamPosition)
+  }
+
+  const updateMode = (updateMode) => {
+    setchangeMode(updateMode)
   }
 
 
@@ -49,33 +51,17 @@ function App() {
     updateGridView,
     updateAxesView,
     updateCamView,
-    updateCamPosition
+    updateCamPosition,
+    updateMode
   }
-
-
 
 
   const [shapesOnCanvas, setShapesOnCanvas] = useState([]);
   const meshRefs = useRef([]);
   const transformRef = useRef();
   const [target, setTarget] = useState(null);
-  const [positionState, setPositionState] = useState([10, 20, 30]);  
-  const { mode, scale, rotation, position, color } = useControls({
-    Transform: folder({
-      mode: { value: 'translate', options: ['translate', 'rotate', 'scale'] },
-      position: positionState,
-      rotation: [0, 0, 0],
-      scale: [0, 0, 0],
-    }),
-    Material: folder({
-      color: { value: '#ff9621' }
-    })
-    
-  });
 
-
-  const addShape = (shape) => {    
-    // console.log(shape);
+  const addShape = (shape) => {
 
     const NewShape = {
         type: shape,
@@ -105,35 +91,78 @@ function App() {
     Window3: nodes.Window3.geometry,
   }
 
-  // const controls = transformRef.current
 
-  //   if(controls)
-  //   {
-  //     // setPositionState([...controls.object.position])
-  //     controls.addEventListener('change', () => {
-  //       // console.log(controls.object.position)
-  //       const newposition = [controls.object.position.x, controls.object.position.y, controls.object.position.z]
-  //       console.log(newposition)
-  //       console.log(controls)
-  //       setPositionState(newposition)
-  //     })
-  //   } 
-    
-  useEffect(() => {
+
+  const handleRoughnessChange = (newvalue) => {
+    target.material.roughness = newvalue
+  }
+  const handleMetalnessChange = (newvalue) => {
+    target.material.metalness = newvalue
+  }
+  const handleColorChange = (newvalue) => {
+    target.material.color.set(newvalue)
+  }
+  const handlePositionChange = (newvalue) => {
+    target.position.set(parseFloat(newvalue[0]),parseFloat(newvalue[1]),parseFloat(newvalue[2]))
+  }
+  const handleRotationChange = (newvalue) => {
+    target.rotation.set(parseFloat(newvalue[0]),parseFloat(newvalue[1]),parseFloat(newvalue[2]))
+  }
+  const handleScaleChange = (newvalue) => {
+    target.scale.set(parseFloat(newvalue[0]),parseFloat(newvalue[1]),parseFloat(newvalue[2]))
+  }
   
+
+  const [selectedObjectColor, setSelectedObjectColor] = useState('#909090');
+  const [selectedObjectRoughness, setselectedObjectRoughness] = useState(1);
+  const [selectedObjectMetalness, setselectedObjectMetalness] = useState(0);
+  const [selectedObjectPosition, setSelectedObjectPosition] = useState([0, 0, 0]);
+  const [selectedObjectRotation, setSelectedObjectRotation] = useState([0, 0, 0]);
+  const [selectedObjectScale, setSelectedObjectScale] = useState([1, 1, 1]);
+
+  const onObjectChange = () => {
+    // console.log(target.position);
+    setSelectedObjectPosition(target.position.toArray());
+    setSelectedObjectRotation(target.rotation.toArray());
+    setSelectedObjectScale(target.scale.toArray());
+  };
+
+  
+
+  useEffect(() => {
     if(target){
-      console.log(Object.keys(nodes))
-      target.material.color.set(color)
+      // target.position.set(2, 0.5, 0)
+      // console.log(target.material.roughness)
+      setselectedObjectRoughness(target.material.roughness)
+      setselectedObjectMetalness(target.material.metalness)
+      setSelectedObjectColor(target.material.color.getHexString());
+      setSelectedObjectPosition(target.position.toArray());
+      setSelectedObjectRotation(target.rotation.toArray());
+      setSelectedObjectScale(target.scale.toArray());
     }
-  }, [color], []);
 
-
+  }, [target],[]);
+  
 
   return (
     <div className='App'>
       <AppNavbar />
       <Buttons addShape={addShape}/> 
       <Toggles updateFunctions={updateFunctions}/>
+      {target && <Interface
+        onRoughnessChange={handleRoughnessChange}
+        setRoughness={selectedObjectRoughness}
+        onMetalnessChange={handleMetalnessChange}
+        setMetalness={selectedObjectMetalness}
+        onColorChange={handleColorChange}
+        setColor={selectedObjectColor}
+        onPositionChange={handlePositionChange}
+        onRotationChange={handleRotationChange}
+        onScaleChange={handleScaleChange}
+        positionMove={selectedObjectPosition}
+        rotationMove={selectedObjectRotation}
+        scaleMove={selectedObjectScale}
+      />}
 
       
       <Canvas shadows onPointerMissed={() => setTarget(null)}>
@@ -145,11 +174,18 @@ function App() {
         <Environment preset="city" />
         {shapesOnCanvas.map((shape, index) => (
           // console.log(allShapes[shape.type]),
-          <mesh geometry={allShapes[shape.type]} receiveShadow castShadow key={shape.id} rotation={[ 0, 0, 0]} position={shape.position} ref={(meshRef) => { meshRefs.current[index] = meshRef; }} onClick={() => {setTarget(meshRefs.current[index]);}}>
-            <meshStandardMaterial color={"#909090"}/>
+          <mesh
+            geometry={allShapes[shape.type]}
+            key={shape.id}
+            rotation={[ 0, 0, 0]}
+            position={shape.position}
+            ref={(meshRef) => { meshRefs.current[index] = meshRef; }}
+            onClick={() => {setTarget(meshRefs.current[index]);}}
+            >
+            <meshStandardMaterial color={"#b3e6e6"}/>
           </mesh> 
         ))}
-          {target && <TransformControls ref={transformRef} object={target} mode={mode} size={.5}/>}
+          {target && <TransformControls ref={transformRef} object={target} mode={changeMode} size={.5} onMouseUp={onObjectChange}/>}
 
         <OrbitControls ref={orbitControlsRef} enableRotate={!camView} makeDefault/>
       </Canvas>
