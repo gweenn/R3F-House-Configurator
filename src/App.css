@@ -20,14 +20,14 @@
 
 .Btntoolbar {
   position: absolute;
-  top: 50px;
-  left: 10px;
+  top: 60px;
+  left: 30px;
 }
 
 .toggle {
   position: absolute;
-  top: 50px;
-  right: 10px;
+  top: 60px;
+  right: 30px;
   z-index: 1;
 }
 
@@ -52,6 +52,51 @@
   margin-right: 10px;
 }
 
+.navicons {
+  position: fixed;
+  right: 10px; 
+}
+.navicons:hover {
+  cursor: pointer; 
+  filter: invert(50%) sepia(100%) saturate(1000%);
+}
+
 .btntoggle.clicked {
   background-color: #d9afd9;
+}
+
+.dropdown-content a {
+  position: fixed;
+  right: 10px; 
+  padding: 10px;
+  text-decoration: none;
+  display: block;
+  color: #333;
+}
+
+.glass {
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.colorpicker{
+  position: absolute;
+  color: white;
+  width: 90%;
+}
+
+.TControls{
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%); 
+  z-index: 1;
+}
+
+.hovered:hover {
+  cursor: pointer;
 }
